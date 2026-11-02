@@ -1,3 +1,4 @@
+
 name: Build AlAsali APK
 
 on:
@@ -30,6 +31,23 @@ jobs:
         run: |
           mkdir project
           unzip -q AlAsali-Android-Starter.zip -d project
+
+      - name: Fix Java JVM target
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("project/app/build.gradle.kts")
+          s = p.read_text()
+          block = """
+              compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
+              }
+          """
+          if "sourceCompatibility = JavaVersion.VERSION_17" not in s:
+              s = s.replace("android {", "android {\n" + block, 1)
+          p.write_text(s)
+          PY
 
       - name: Build APK
         run: gradle -p project assembleDebug
